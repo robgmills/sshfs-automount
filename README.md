@@ -11,7 +11,14 @@ sh -c "$(curl -fsSL https://raw.github.com/robgmills/sshfs-automount/master/inst
 
 And follow the prompts!
 
-## Pre-requisites
+## Got it.  But WTF does it do?
+
+The script provided does the following:
+0. Checks that the pre-requisite software is installed.
+0. Installs a launchd `.plist` configuration to tweak the FUSE kernel module to `allow_other`
+0. Creates a separate Automount configuration file for SSHFS automounts.
+
+## It doesn't work.  You suck.
 
 This is just a script that automates the configuration of an SSHFS mount using OS X's automount
 capability.  As such, this script depends on:
@@ -20,14 +27,18 @@ capability.  As such, this script depends on:
 0. OSXFUSE (tested on v2.7.3)
 0. SSHFS (tested on v2.5.0)
 
-## What this does
+Make sure that you have those installed.  If you're still having problems, please submit an issue with a description of what's happening.  Be sure to include any error text and if you could provide detailed steps to reproduce, it'll help me turn a fix around faster. 
 
-The script provided does the following:
-0. Checks that the pre-requisite software is installed.
-0. Prompts the user for configuration input
-0. Clones the git repository containing template config files
-0. Creates the desired directory for the SSHFS mount
-0. Creates the necessary `.plist` file and add it to OS X's autostart configuration
+## FAQ
+### How do I uninstall this P.O.S.?
+
+Run the following in a Terminal:
+
+```sh
+sh -c "$(curl -fsSL https://raw.github.com/robgmills/sshfs-automount/master/uninstall.sh)"
+```
+
+Alternatively, the [installation script](./install.sh) is open source.  Reverse the steps found within and you should be good.
 
 ## Disclaimer
 This has been tested on my Mid-2014, Core i7, Retina Macbook Pro running Yosemite (OS X 10.10.5) *ONLY*!
