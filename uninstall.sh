@@ -26,27 +26,26 @@ main() {
 
   SSHFSAMDIR="/Library/Application Support/SSHFSAutomount"
   LAUNCHDDIR="/Library/LaunchDaemons"
-  SSHFSAMGIT="https://raw.githubusercontent.com/robgmills/sshfs-automount/master"
   SSHFSAM="com.rgm.sshfs-automount"
   SSHFSAMPLIST="${SSHFSAM}.plist"
-  SSHFSAMSCRIPT="${SSHFSAM}.sh"
-  SSHFSPLISTURL="${SSHFSAMGIT}/${SSHFSAMPLIST}"
-  SSHFSSCRIPTURL="${SSHFSAMGIT}/${SSHFSAMSCRIPT}"
-  SSHFSAMPLISTFULL="${SSHFSAMDIR}/${SSHFSAMPLIST}"
-  SSHFSAMSCRIPTFULL="${SSHFSAMDIR}/${SSHFSAMSCRIPT}"
   LAUNCHDFULL="${LAUNCHDDIR}/${SSHFSAMPLIST}"
 
-  CHECK_AUTOSSHFSCFG_RUNNING=$(launchctl list | grep "${SSHFSAM}" | wc -l)
-  if [ $CHECK_AUTOSSHFSCFG_RUNNING -ge 1 ]; then 
+#  CHECK_AUTOSSHFSCFG_RUNNING=$(launchctl list | grep "${SSHFSAM}" | wc -l)
+#  if [ $CHECK_AUTOSSHFSCFG_RUNNING -ge 1 ]; then 
     sudo launchctl unload "${LAUNCHDFULL}"
+#  fi
+  unset CHECK_AUTOSSHFSCFG_RUNNING
+
+  if [ -L "${LAUNCHDFULL}" ]; then
+    sudo rm "${LAUNCHDFULL}"
   fi
 
   if [ -d "${SSHFSAMDIR}" ]; then
     sudo rm -r "${SSHFSAMDIR}"
   fi
 
-  if [ -L "${LAUNCHDFULL}" ]; then
-    sudo rm "${LAUNCHDFULL}"
+  if [ -L /sbin/mount_sshfs ]; then
+    sudo rm /sbin/mount_sshfs
   fi
 
   AUTO_MASTER_CFG="/-                              auto_ssh          -nobrowse,nosuid"
@@ -55,7 +54,12 @@ main() {
     sudo sed -i '' '/\/-                              auto_ssh          -nobrowse,nosuid/d' /etc/auto_master
     sudo rm /etc/auto_ssh
   fi
-  unset CHECK_AUTOSSHCFG_INSTALLED
+
+  unset SSHFSAMDIR
+  unset LAUNCHDDIR
+  unset SSHFSAM
+  unset SSHFSAMPLIST
+  unset LAUNCHDFULL
 
   printf "${GREEN}"
   echo 'SSHFS Automount....is now uninstalled. Goodbye!'

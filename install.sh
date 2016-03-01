@@ -69,9 +69,19 @@ main() {
   sudo curl -s -o "${SSHFSAMPLISTFULL}" "${SSHFSPLISTURL}"
   sudo curl -s -o "${SSHFSAMSCRIPTFULL}" "${SSHFSSCRIPTURL}"
   sudo chmod +x "${SSHFSAMSCRIPTFULL}"
-  sudo rm "${LAUNCHDFULL}"
+  if [ -L $LAUNCHDFULL ]; then
+    sudo rm "${LAUNCHDFULL}"
+  fi
   sudo ln -s "${SSHFSAMPLISTFULL}" "${LAUNCHDFULL}" 
   sudo launchctl load "${LAUNCHDFULL}"
+
+  # TODO
+  if ! [ -L /sbin/mount_sshfs ]; then
+    printf "${BLUE}OSXFuse/SSHFS wasn't properly linked to the /sbin directory...linking${NORMAL}\n"
+    SSHFSBIN=$(which sshfs)
+    sudo ln -s $SSHFSBIN /sbin/mount_sshfs
+  fi
+
 
   AUTO_MASTER_CFG="/-                              auto_ssh          -nobrowse,nosuid"
   CHECK_AUTOSSHCFG_INSTALLED=$(grep "${AUTO_MASTER_CFG}" "/etc/auto_master" | wc -l)
