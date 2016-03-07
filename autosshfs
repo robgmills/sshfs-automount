@@ -61,15 +61,12 @@ print_help() {
 }
 
 main() {
-    printf "sshfs: $sshfs\n"
-    printf "mountpoint: $mountpoint\n"
-    printf "options: $options\n"
-
     # /mnt/dir         -fstype=sshfs,opt1,opt2,opt3          user@host:/dir
-    cfg="$mountpoint         -fstype=sshfs,$options        $sshfs"
+    #cfg="$mountpoint         -fstype=sshfs,$options        $sshfs"
+    cfg="$mountpoint -fstype=sshfs,$options $sshfs"
     printf "$cfg\n"
-    #echo "$cfg" | sudo tee -a /etc/auto_ssh > /dev/null
-    #sudo automount -vc 
+    echo "$cfg" | sudo tee -a /etc/auto_ssh > /dev/null
+    sudo automount -vc 
 }
 
 parse_args() {
