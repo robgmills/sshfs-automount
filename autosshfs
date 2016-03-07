@@ -1,0 +1,156 @@
+#!/bin/sh
+VERSION=0.1
+
+print_version() {
+    printf "SSHFS Automount version \"$VERSION\"\n"
+}
+
+print_help() {
+    print_version
+    printf "\n"
+    printf "usage: autosshfs [user@]host[:dir] mountpoint [options]\n"
+    printf "\n"
+    printf "OPTIONS (see man sshfs)\n"
+#    printf "general options:\n"
+#    printf "    -o opt,[opt...]        mount options\n"
+#    printf "    -h   --help            print help\n"
+#    printf "    -V   --version         print version\n"
+#    printf "\n"
+#    printf "SSHFS options:\n"
+#    printf "    -p PORT                equivalent to '-o port=PORT'\n"
+#    printf "    -C                     equivalent to '-o compression=yes'\n"
+#    printf "    -F ssh_configfile      specifies alternative ssh configuration file\n"
+#    printf "    -1                     equivalent to '-o ssh_protocol=1'\n"
+#    printf "    -o reconnect           reconnect to server\n"
+#    printf "    -o delay_connect       delay connection to server\n"
+#    printf "    -o sshfs_sync          synchronous writes\n"
+#    printf "    -o no_readahead        synchronous reads (no speculative readahead)\n"
+#    printf "    -o sync_readdir        synchronous readdir\n"
+#    printf "    -o sshfs_debug         print some debugging information\n"
+#    printf "    -o cache=BOOL          enable caching {yes,no} (default: yes)\n"
+#    printf "    -o cache_timeout=N     sets timeout for caches in seconds (default: 20)\n"
+#    printf "    -o cache_X_timeout=N   sets timeout for {stat,dir,link} cache\n"
+#    printf "    -o workaround=LIST     colon separated list of workarounds\n"
+#    printf "            none             no workarounds enabled\n"
+#    printf "            all              all workarounds enabled\n"
+#    printf "            [no]rename       fix renaming to existing file (default: off)\n"
+#    printf "            [no]nodelaysrv   set nodelay tcp flag in sshd (default: off)\n"
+#    printf "            [no]truncate     fix truncate for old servers (default: off)\n"
+#    printf "            [no]buflimit     fix buffer fillup bug in server (default: on)\n"
+#    printf "    -o idmap=TYPE          user/group ID mapping, possible types are:\n"
+#    printf "            none             no translation of the ID space\n"
+#    printf "            user             only translate UID/GID of connecting user (default)\n"
+#    printf "            file             translate UIDs/GIDs contained in uidfile/gidfile\n"
+#    printf "    -o uidfile=FILE        file containing username:remote_uid mappings\n"
+#    printf "    -o gidfile=FILE        file containing groupname:remote_gid mappings\n"
+#    printf "    -o nomap=TYPE          with idmap=file, how to handle missing mappings\n"
+#    printf "            ignore           don't do any re-mapping\n"
+#    printf "            error            return an error (default)\n"
+#    printf "    -o ssh_command=CMD     execute CMD instead of 'ssh'\n"
+#    printf "    -o ssh_protocol=N      ssh protocol to use (default: 2)\n"
+#    printf "    -o sftp_server=SERV    path to sftp server or subsystem (default: sftp)\n"
+#    printf "    -o directport=PORT     directly connect to PORT bypassing ssh\n"
+#    printf "    -o slave               communicate over stdin and stdout bypassing network\n"
+#    printf "    -o disable_hardlink    link(2) will return with errno set to ENOSYS\n"
+#    printf "    -o transform_symlinks  transform absolute symlinks to relative\n"
+#    printf "    -o follow_symlinks     follow symlinks on the server\n"
+#    printf "    -o no_check_root       don't check for existence of 'dir' on server\n"
+#    printf "    -o password_stdin      read password from stdin (only for pam_mount!)\n"
+#    printf "    -o SSHOPT=VAL          ssh options (see man ssh_config)\n"
+
+}
+
+main() {
+    printf "sshfs: $sshfs\n"
+    printf "mountpoint: $mountpoint\n"
+    printf "options: $options\n"
+
+    # /mnt/dir         -fstype=sshfs,opt1,opt2,opt3          user@host:/dir
+    cfg="$mountpoint         -fstype=sshfs,$options        $sshfs"
+    printf "$cfg\n"
+    #echo "$cfg" | sudo tee -a /etc/auto_ssh > /dev/null
+    #sudo automount -vc 
+}
+
+parse_args() {
+    args=("$@")
+    typeset -i i tf
+    let i=0 tf=0
+    while ((i<${#args[@]})); do
+        arg=${args[$i]}
+        case $arg in
+            -h|--help)
+                print_help
+                exit 0 # IMMEDIATELY EXIT
+                ;;
+            -V|--version)
+                print_version
+                exit 0 #IMMEDIATELY EXIT
+                ;;
+            -p|--port) # optional
+                let i++
+                port=${args[$i]}
+                ;;
+            -o) # optional
+                let i++
+                if [ ! "$options"  ]; then
+                    options="${args[$i]}"
+                else
+                    options="$options,${args[$i]}"
+                fi
+                ;;
+            *)
+                if [ $tf == 0 ]; then
+                    # [user@]host[:dir]
+                    sshfs=$arg
+                    let tf++
+                else
+                    # mountpoint
+                    mountpoint=$arg
+                fi 
+                ;;
+        esac
+        let i++
+    done
+
+    if [ ! "$options" ]; then
+        options="allow_other,idmap=user,cache=no,umask=0000" # defaults
+    fi
+}
+
+validate() {
+    args=("$@")
+    if [ ${#args[@]} -eq 0 ]; then
+        printf "${RED}[ERROR] Invalid arguments!${NORMAL}\n"
+        print_help
+        exit 3
+    fi
+}
+
+colorzz() {
+    # Use colors, but only if connected to a terminal, and that terminal
+    # supports them.
+    if which tput >/dev/null 2>&1; then
+        ncolors=$(tput colors)
+    fi
+    if [ -t 1 ] && [ -n "$ncolors" ] && [ "$ncolors" -ge 8 ]; then
+        RED="$(tput setaf 1)"
+        GREEN="$(tput setaf 2)"
+        YELLOW="$(tput setaf 3)"
+        BLUE="$(tput setaf 4)"
+        BOLD="$(tput bold)"
+        NORMAL="$(tput sgr0)"
+    else
+        RED=""
+        GREEN=""
+        YELLOW=""
+        BLUE=""
+        BOLD=""
+        NORMAL=""
+    fi
+}
+
+colorzz
+validate $@
+parse_args $@
+main $@
